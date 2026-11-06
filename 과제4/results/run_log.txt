@@ -1,0 +1,26 @@
+﻿train (50000, 3072), test (10000, 3072)
+[CV] l2 fold 0: 69s, best acc 0.3090
+[CV] l2 fold 1: 53s, best acc 0.3108
+[CV] l2 fold 2: 66s, best acc 0.3098
+[CV] l2 fold 3: 61s, best acc 0.3103
+[CV] l2 fold 4: 52s, best acc 0.3257
+[CV] cosine fold 0: 56s, best acc 0.3327
+[CV] cosine fold 1: 40s, best acc 0.3292
+[CV] cosine fold 2: 41s, best acc 0.3367
+[CV] cosine fold 3: 40s, best acc 0.3483
+[CV] cosine fold 4: 39s, best acc 0.3405
+[CV] l1 fold 0: 174s, best acc 0.3445
+[CV] l1 fold 1: 125s, best acc 0.3488
+[CV] l1 fold 2: 136s, best acc 0.3402
+[CV] l1 fold 3: 155s, best acc 0.3493
+[CV] l1 fold 4: 150s, best acc 0.3558
+[CV] linf fold 0: 119s, best acc 0.1812
+[CV] linf fold 1: 120s, best acc 0.1752
+[CV] linf fold 2: 119s, best acc 0.1865
+[CV] linf fold 3: 124s, best acc 0.1835
+[CV] linf fold 4: 123s, best acc 0.1850
+[TEST] l2 k=5: 417s, acc 0.3556, f1 0.3452
+[TEST] cosine k=7: 289s, acc 0.3810, f1 0.3719
+[TEST] l1 k=7: 1552s, acc 0.3923, f1 0.3866
+[TEST] linf k=3: 919s, acc 0.1831, f1 0.1419
+done

@@ -1,0 +1,31 @@
+Morphology assignment - validation report
+Date: 2026-10-02
+Python: 3.13.5
+NumPy: 2.3.5
+Pillow: 12.3.0
+OpenCV (reference only): 4.13.0
+
+13 unit tests passed.
+280 OpenCV reference comparisons: exact equality, 0 mismatched pixels.
+Neutral border values: dilation=0; erosion=255.
+Main results: Square 7x7, 1 iteration per primitive stage.
+
+Execution log:
+test_asymmetric_SE_orientation (test_morphology.MorphologyTests.test_asymmetric_SE_orientation) ... ok
+test_closing_fills_five_pixel_gap (test_morphology.MorphologyTests.test_closing_fills_five_pixel_gap) ... ok
+test_closing_fills_three_small_holes (test_morphology.MorphologyTests.test_closing_fills_three_small_holes) ... ok
+test_closing_preserves_large_hole (test_morphology.MorphologyTests.test_closing_preserves_large_hole) ... ok
+test_dilation_of_single_pixel (test_morphology.MorphologyTests.test_dilation_of_single_pixel) ... ok
+test_erosion_of_rectangle (test_morphology.MorphologyTests.test_erosion_of_rectangle) ... ok
+test_extensivity_and_idempotence (test_morphology.MorphologyTests.test_extensivity_and_idempotence) ... ok
+test_invalid_input (test_morphology.MorphologyTests.test_invalid_input) ... ok
+test_matches_opencv_280_comparisons (test_morphology.MorphologyTests.test_matches_opencv_280_comparisons) ... ok
+test_neutral_border_and_output_format (test_morphology.MorphologyTests.test_neutral_border_and_output_format) ... ok
+test_opening_breaks_three_pixel_bridge (test_morphology.MorphologyTests.test_opening_breaks_three_pixel_bridge) ... ok
+test_opening_removes_six_bright_specks (test_morphology.MorphologyTests.test_opening_removes_six_bright_specks) ... ok
+test_original_not_modified (test_morphology.MorphologyTests.test_original_not_modified) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.144s
+
+OK

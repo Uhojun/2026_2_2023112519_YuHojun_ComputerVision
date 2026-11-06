@@ -1,0 +1,6 @@
+operation,nonzero_pixels,changed_pixels
+Original,35814,0
+Dilation,42265,6451
+Erosion,29902,5912
+Opening,35596,218
+Closing,36259,445

@@ -1,0 +1,40 @@
+Morphological Image Processing: Dilation, Erosion, Opening and Closing
+Due: October 2, 2026
+
+Image selection
+A 384 x 288 grayscale test image was deliberately designed instead of selecting a random photograph. It contains six small bright specks, three small dark holes, one larger dark hole, a five-pixel gap, and a three-pixel-thick bridge. The background is 0; the objects are 255 or 170. These controlled features make expansion, shrinking, noise removal, and gap filling easy to observe.
+
+Method
+All four techniques were implemented using NumPy comparisons, without calling a built-in morphological operation. Dilation takes a local maximum and erosion takes a local minimum over the active SE positions. Opening performs erosion followed by dilation; closing uses the reverse order. The main experiment uses the same 7 x 7 square SE and one iteration per stage. Each technique starts independently from the original image. No thresholding is applied. Neutral border values are 0 for dilation and 255 for erosion.
+
+Observed results
+Dilation expanded the objects and thickened the thin bridge. It also enlarged the bright specks and filled the small holes and narrow gap.
+
+Erosion shrank the objects and enlarged the dark holes and gap. Small bright specks and the thin bridge disappeared, but the main objects also became smaller.
+
+Opening removed all six specks and the thin bridge while restoring the outer dimensions of the main rectangles in this particular image. Removed details were not restored. Opening does not generally recover every detail of the original shape.
+
+Closing filled all three small holes and the five-pixel gap while restoring the main rectangular outer boundaries. The bright specks and thin bridge remained. The 15 x 15 hole also remained, showing that closing does not fill holes of every size.
+
+Measurement
+Nonzero-pixel counts, including white and gray regions:
+Original: 35,814
+Dilation: 42,265
+Erosion: 29,902
+Opening: 35,596
+Closing: 36,259
+
+Opening removed 86 speck pixels and 132 bridge pixels. Closing filled 75 small-hole pixels and 370 gap pixels.
+
+Conclusion
+Dilation and erosion primarily expand and shrink bright regions. Opening removes small bright features, while closing fills small dark features. The outcome depends on the SE size and shape.
+
+Validation
+All 13 unit tests passed. With matched border settings, 280 comparisons against OpenCV were pixel-identical: seven test inputs, five SEs, two iteration settings and four operations.
+
+Concept references
+OpenCV: Morphological Transformations
+https://docs.opencv.org/4.12.0/d9/d61/tutorial_py_morphological_ops.html
+SciPy: grey_dilation / grey_erosion
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.grey_dilation.html
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.grey_erosion.html
