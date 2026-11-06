@@ -6,21 +6,21 @@ import matplotlib.pyplot as plt
 
 
 # ==================================================
-# 1. 기본 설정
+# 1. Settings
 # ==================================================
-# main.py와 같은 폴더에 이미지 두 장을 넣으세요.
+# Put the two images in the same folder as main.py.
 BASE_DIR = Path(__file__).resolve().parent
 IMAGE_FILES = ["image.jpg", "image1.jpg"]
 OUTPUT_DIR = BASE_DIR / "results"
 
-# 기존 과제와 동일하게 각 기본 연산을 2회 적용합니다.
-# 효과가 너무 강하면 1로 바꾸세요.
+# As in Assignment 2, each basic operation is applied twice.
+# Change this to 1 if the effect is too strong.
 ITERATIONS = 2
-SHOW_WINDOWS = True  # False: 창을 띄우지 않고 결과만 저장
+SHOW_WINDOWS = True  # False: save the results without opening windows
 
 
 # ==================================================
-# 2. 구조 요소(SE) 정의: 기존 과제와 동일
+# 2. Structuring elements (SE): same as Assignment 2
 # ==================================================
 KERNELS = {
     "Cross SE (5x5)": np.array([
@@ -48,39 +48,39 @@ KERNELS = {
 
 
 # ==================================================
-# 3. 그레이스케일 이미지 읽기
+# 3. Read a grayscale image
 # ==================================================
 def read_grayscale(path: Path) -> np.ndarray:
     if not path.is_file():
-        raise FileNotFoundError(f"이미지를 찾을 수 없습니다: {path}")
+        raise FileNotFoundError(f"Image not found: {path}")
 
-    # 한글이 포함된 경로에서도 읽을 수 있도록 처리합니다.
+    # Decode from bytes so that paths with non-ASCII characters also work.
     data = np.fromfile(str(path), dtype=np.uint8)
     if data.size == 0:
-        raise ValueError(f"이미지 파일이 비어 있습니다: {path}")
+        raise ValueError(f"Image file is empty: {path}")
 
     image = cv2.imdecode(data, cv2.IMREAD_GRAYSCALE)
     if image is None:
-        raise ValueError(f"이미지를 읽을 수 없습니다: {path}")
+        raise ValueError(f"Could not read image: {path}")
     return image
 
 
 # ==================================================
-# 4. 침식 / 열림 / 닫힘 수행
+# 4. Apply erosion / opening / closing
 # ==================================================
 def apply_morphology(image: np.ndarray) -> dict:
     results = {"Erosion": [], "Opening": [], "Closing": []}
 
     for kernel in KERNELS.values():
-        # 침식: 원본 → 침식
+        # Erosion: original -> erosion
         erosion = cv2.erode(image, kernel, iterations=ITERATIONS)
 
-        # 열림: 원본 → 침식 → 팽창
-        # 위의 침식 결과를 팽창의 입력으로 사용합니다.
+        # Opening: original -> erosion -> dilation
+        # The erosion result above is the input to the dilation.
         opening = cv2.dilate(erosion, kernel, iterations=ITERATIONS)
 
-        # 닫힘: 원본 → 팽창 → 침식
-        # 열림 결과가 아니라 원본에서 다시 시작합니다.
+        # Closing: original -> dilation -> erosion
+        # Starts again from the original, not from the opening result.
         dilation = cv2.dilate(image, kernel, iterations=ITERATIONS)
         closing = cv2.erode(dilation, kernel, iterations=ITERATIONS)
 
@@ -92,7 +92,7 @@ def apply_morphology(image: np.ndarray) -> dict:
 
 
 # ==================================================
-# 5. 원본 + SE별 결과 + SE 배열 표시 및 저장
+# 5. Show and save the original, the result per SE, and each SE array
 # ==================================================
 def plot_comparison(original: np.ndarray, processed: list,
                     operation: str, image_name: str) -> None:
@@ -100,7 +100,7 @@ def plot_comparison(original: np.ndarray, processed: list,
     images = [original] + processed
     kernels = [None] + list(KERNELS.values())
 
-    # 위쪽: 이미지 / 아래쪽: SE의 0·1 배열
+    # Top: images / bottom: the 0/1 array of each SE
     fig = plt.figure(figsize=(24, 9))
     grid = fig.add_gridspec(
         2, 6, height_ratios=[3, 1.5], hspace=0.08, wspace=0.25
@@ -112,7 +112,7 @@ def plot_comparison(original: np.ndarray, processed: list,
 
     for i, (title, image, kernel) in enumerate(zip(titles, images, kernels)):
         ax = fig.add_subplot(grid[0, i])
-        # 모든 결과를 같은 밝기 범위(0~255)로 비교합니다.
+        # All results are compared on the same intensity range (0-255).
         ax.imshow(image, cmap="gray", vmin=0, vmax=255)
         ax.set_title(title, fontsize=14)
         ax.axis("off")
@@ -140,20 +140,20 @@ def plot_comparison(original: np.ndarray, processed: list,
     fig.subplots_adjust(top=0.88, bottom=0.04, left=0.03, right=0.99)
     output_path = OUTPUT_DIR / f"{Path(image_name).stem}_{operation.lower()}.png"
     fig.savefig(output_path, dpi=180, bbox_inches="tight")
-    print(f"저장 완료: {output_path}")
+    print(f"Saved: {output_path}")
 
     if not SHOW_WINDOWS:
         plt.close(fig)
 
 
 # ==================================================
-# 6. 실행
+# 6. Run
 # ==================================================
 def main() -> None:
     if not isinstance(ITERATIONS, int) or ITERATIONS < 1:
-        raise ValueError("ITERATIONS는 1 이상의 정수여야 합니다.")
+        raise ValueError("ITERATIONS must be an integer of at least 1.")
 
-    # 필요한 이미지를 먼저 확인하고 읽습니다.
+    # Check and read all the required images first.
     inputs = [
         (name, read_grayscale(BASE_DIR / name)) for name in IMAGE_FILES
     ]

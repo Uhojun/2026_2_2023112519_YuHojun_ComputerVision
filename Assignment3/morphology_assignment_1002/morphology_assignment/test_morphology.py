@@ -1,8 +1,8 @@
-"""실행: python -m unittest -v test_morphology
+"""Run: python -m unittest -v test_morphology
 
-기본 테스트는 NumPy/Pillow만으로 실행합니다.
-OpenCV가 설치되어 있으면 280가지 결과를 픽셀 단위로 추가 대조합니다.
-OpenCV는 정답 검증에만 사용하며 main.py의 연산에는 사용하지 않습니다.
+The basic tests need only NumPy and Pillow.
+If OpenCV is installed, 280 results are also compared with it pixel by pixel.
+OpenCV is used only to check the results; main.py does not use it.
 """
 import unittest
 
@@ -119,7 +119,7 @@ class MorphologyTests(unittest.TestCase):
         np.testing.assert_array_equal(self.image, before)
 
     def test_asymmetric_SE_orientation(self):
-        # 수학적 팽창: 오른쪽으로 뻗은 SE는 원본 점을 오른쪽으로 확장합니다.
+        # Mathematical dilation: an SE extending right expands a point to the right.
         image = np.zeros((5, 7), dtype=np.uint8)
         image[2, 3] = 255
         se = np.array([[0, 1, 1]], dtype=np.uint8)

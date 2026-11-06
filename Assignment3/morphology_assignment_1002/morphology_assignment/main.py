@@ -1,12 +1,12 @@
-"""형태학 과제: Dilation / Erosion / Opening / Closing 직접 구현.
+"""Morphology assignment: Dilation / Erosion / Opening / Closing implemented from scratch.
 
-실행: python main.py
-추가 구조 요소 5종 비교: python main.py --all-se
-다른 이미지 사용: python main.py --input "my_image.png"
+Run: python main.py
+Compare all five structuring elements: python main.py --all-se
+Use another image: python main.py --input "my_image.png"
 
-필요 패키지: numpy, Pillow
-OpenCV, SciPy의 형태학 연산 함수는 사용하지 않습니다.
-흑백/그레이스케일 모두 처리하며, 이진화나 크기 변경은 하지 않습니다.
+Required packages: numpy, Pillow
+The morphology functions of OpenCV and SciPy are not used.
+Binary and grayscale images are both handled, with no thresholding or resizing.
 """
 from __future__ import annotations
 
@@ -17,9 +17,9 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 
-# ---------- 1. 직접 구현한 형태학 연산 ----------
+# ---------- 1. Morphology operations implemented from scratch ----------
 def _check(image: np.ndarray, se: np.ndarray) -> np.ndarray:
-    """입력은 uint8 그레이스케일, SE는 중심이 1인 홀수 크기 0/1 배열."""
+    """The input is uint8 grayscale; the SE is an odd-sized 0/1 array whose center is 1."""
     if not isinstance(image, np.ndarray) or image.ndim != 2 or image.size == 0:
         raise ValueError("image must be a nonempty 2-D NumPy array.")
     if image.dtype != np.uint8:
@@ -36,11 +36,11 @@ def _check(image: np.ndarray, se: np.ndarray) -> np.ndarray:
 
 def _extreme_filter(image: np.ndarray, se: np.ndarray, *, dilate: bool,
                     iterations: int = 1) -> np.ndarray:
-    """SE에서 1인 위치의 값들을 직접 비교해 최대/최솟값을 구합니다.
+    """Find the max/min by directly comparing the values at the positions where the SE is 1.
 
-    각 SE 오프셋에 대해 영상 전체를 한 번에 비교하므로 픽셀 이중 반복문보다
-    빠릅니다. np.maximum/minimum은 두 배열의 값 비교이며 형태학 전용 함수가
-    아닙니다. 원본 배열은 덮어쓰지 않습니다.
+    The whole image is compared at once for each SE offset, which is faster than
+    a double loop over pixels. np.maximum/minimum compare two arrays and are not
+    morphology functions. The input array is not overwritten.
     """
     mask = _check(image, se)
     if isinstance(iterations, bool) or not isinstance(iterations, (int, np.integer)):
@@ -48,14 +48,14 @@ def _extreme_filter(image: np.ndarray, se: np.ndarray, *, dilate: bool,
     if iterations < 1:
         raise ValueError("iterations must be at least 1.")
 
-    # 수학적 팽창에서는 SE를 180도 뒤집습니다.
-    # 이번 5개 SE는 모두 중심 대칭이므로 뒤집어도 같은 모양입니다.
+    # Mathematical dilation reflects the SE by 180 degrees.
+    # All five SEs here are centrally symmetric, so reflecting keeps their shape.
     if dilate:
         mask = mask[::-1, ::-1]
     ry, rx = mask.shape[0] // 2, mask.shape[1] // 2
     height, width = image.shape
-    # 경계 밖 값은 연산에 영향을 주지 않도록 설정합니다.
-    # uint8에서 max에는 0, min에는 255가 중립값입니다.
+    # Values outside the border are set so that they do not affect the result.
+    # For uint8, the neutral value is 0 for max and 255 for min.
     border = 0 if dilate else 255
     combine = np.maximum if dilate else np.minimum
     current = image.copy()
@@ -71,34 +71,34 @@ def _extreme_filter(image: np.ndarray, se: np.ndarray, *, dilate: bool,
 
 
 def dilation(image: np.ndarray, se: np.ndarray, iterations: int = 1) -> np.ndarray:
-    """팽창: 이웃의 최댓값. 밝은 물체가 확장됩니다."""
+    """Dilation: local maximum. Bright objects expand."""
     return _extreme_filter(image, se, dilate=True, iterations=iterations)
 
 
 def erosion(image: np.ndarray, se: np.ndarray, iterations: int = 1) -> np.ndarray:
-    """침식: 이웃의 최솟값. 밝은 물체가 축소됩니다."""
+    """Erosion: local minimum. Bright objects shrink."""
     return _extreme_filter(image, se, dilate=False, iterations=iterations)
 
 
 def opening(image: np.ndarray, se: np.ndarray, iterations: int = 1) -> np.ndarray:
-    """열림: 침식 → 팽창. 같은 SE로 작은 밝은 잡음/가는 연결을 제거합니다."""
+    """Opening: erosion -> dilation with the same SE. Removes small bright noise and thin bridges."""
     return dilation(erosion(image, se, iterations), se, iterations)
 
 
 def closing(image: np.ndarray, se: np.ndarray, iterations: int = 1) -> np.ndarray:
-    """닫힘: 팽창 → 침식. 같은 SE로 작은 어두운 구멍/좁은 틈을 채웁니다."""
+    """Closing: dilation -> erosion with the same SE. Fills small dark holes and narrow gaps."""
     return erosion(dilation(image, se, iterations), se, iterations)
 
 
-# ---------- 2. 목적에 맞게 설계한 원본 이미지 ----------
+# ---------- 2. Original image designed for this experiment ----------
 def create_test_image() -> np.ndarray:
-    """무작위 이미지가 아닌, 네 가지 효과를 확인하는 384x288 테스트 영상.
+    """A 384x288 test image designed to show the four effects, not a random image.
 
-    배경=0, 흰 물체=255, 회색 물체=170. 난수/이진화/보간을 사용하지 않습니다.
-    좌상: 큰 사각형 + 3x3, 5x5 크기의 고립된 밝은 점 6개.
-    우상: 큰 사각형 안에 작은 5x5 구멍 3개와 큰 15x15 구멍 1개.
-    좌하: 밝기 170인 두 사각형 사이에 폭 5픽셀의 수직 틈.
-    우하: 두 흰 사각형 사이에 두께 3픽셀의 수평 연결선.
+    Background=0, white objects=255, gray objects=170. No randomness, thresholding or interpolation.
+    Top left: a large rectangle and six isolated bright specks of size 3x3 and 5x5.
+    Top right: a large rectangle with three small 5x5 holes and one large 15x15 hole.
+    Bottom left: a 5-pixel-wide vertical gap between two rectangles of intensity 170.
+    Bottom right: a 3-pixel-thick horizontal bridge between two white rectangles.
     """
     image = np.zeros((288, 384), dtype=np.uint8)
     image[34:118, 38:114] = 255
@@ -121,13 +121,13 @@ def create_test_image() -> np.ndarray:
 
 
 def structuring_elements() -> dict[str, np.ndarray]:
-    """1인 위치만 연산에 참여합니다. 0은 검은 픽셀이 아니라 미사용 위치입니다.
+    """Only positions with 1 take part. A 0 is an unused position, not a black pixel.
 
-    Square: 모든 방향의 확장/축소를 비교하는 기본 SE.
-    Cross: 십자 방향의 이웃을 사용.
-    Diamond: 가로/세로와 가까운 대각선 이웃을 사용.
-    Vertical / Horizontal: 각각 세로/가로 방향 효과를 비교.
-    크기도 다르므로 추가 실험은 '모양만'의 공정한 비교는 아닙니다.
+    Square: the default SE, for comparing expansion/shrinking in all directions.
+    Cross: uses neighbors along the cross.
+    Diamond: uses horizontal, vertical and nearby diagonal neighbors.
+    Vertical / Horizontal: compare the vertical and horizontal effects.
+    Their sizes also differ, so the extra experiment is not a fair comparison of shape alone.
     """
     cross = np.zeros((5, 5), dtype=np.uint8)
     cross[2, :] = 1
@@ -146,7 +146,7 @@ OPERATIONS = {"Dilation": dilation, "Erosion": erosion,
               "Opening": opening, "Closing": closing}
 
 
-# ---------- 3. 결과 저장과 비교 이미지 ----------
+# ---------- 3. Saving results and the comparison image ----------
 def _font(size: int, mono: bool = False):
     candidates = ["DejaVuSansMono.ttf", "consola.ttf"] if mono else [
         "DejaVuSans.ttf", "arial.ttf"]
@@ -160,10 +160,10 @@ def _font(size: int, mono: bool = False):
 
 def save_comparison(original: np.ndarray, results: dict[str, np.ndarray],
                     se: np.ndarray, name: str, iterations: int, path: Path) -> None:
-    """각 영상은 같은 배율, 밝기 범위(0~255)로 표시합니다.
+    """Each image is shown at the same scale and intensity range (0-255).
 
-    비교용 그림만 최근접 보간으로 표시 크기를 조절합니다.
-    개별 PNG는 처리 당시 원본 해상도를 그대로 유지합니다.
+    Only the comparison figure is resized, using nearest-neighbor interpolation.
+    The individual PNGs keep the original resolution.
     """
     gap, margin, card_w, card_h = 28, 36, 800, 738
     sheet = Image.new("RGB", (2 * card_w + gap + 2 * margin,
@@ -219,7 +219,7 @@ def run_experiment(image: np.ndarray, se: np.ndarray, name: str,
     Image.fromarray(image).save(folder / "00_original.png")
     results = {}
     for index, (label, operation) in enumerate(OPERATIONS.items(), start=1):
-        # 순차적으로 네 연산을 누적하지 않습니다. 매번 원본에서 시작합니다.
+        # The four operations are not chained; each starts from the original.
         results[label] = operation(image, se, iterations)
         Image.fromarray(results[label]).save(folder / f"0{index}_{label.lower()}.png")
     np.savetxt(folder / "structuring_element.txt", se, fmt="%d")

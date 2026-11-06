@@ -1,19 +1,19 @@
-"""CIFAR-10 K-Nearest Neighbors 구현 및 평가.
+"""CIFAR-10 K-Nearest Neighbors: implementation and evaluation.
 
-KNN과 평가 지표, 5-fold 분할은 NumPy로 직접 구현했다(scikit-learn 미사용).
+KNN, the evaluation metrics and the 5-fold split are implemented in NumPy (no scikit-learn).
 
-실험 순서
-  1. 클래스 균형을 맞춘 학습 표본(기본 20,000장)으로 5-fold 교차검증을 수행해
-     거리 척도와 k의 모든 조합을 평가한다.
-  2. 거리 척도별로 교차검증 macro F1이 가장 높은 k를 고른다.
-  3. 학습 데이터 50,000장 전체로 테스트셋 10,000장을 평가한다.
-     테스트 결과는 k 선택에 사용하지 않는다.
+Experiment steps
+  1. Run 5-fold cross-validation on a class-balanced training sample (20,000 images
+     by default) to evaluate every combination of distance metric and k.
+  2. For each distance metric, pick the k with the highest cross-validation macro F1.
+  3. Evaluate the 10,000 test images using all 50,000 training images.
+     Test results are not used to choose k.
 
-실행 예
-  python knn_cifar10.py --threads 16   # 기본 설정 (약 1시간)
-  python knn_cifar10.py --n-cv 50000   # 학습 데이터 전체로 교차검증 (수 시간)
+Examples
+  python knn_cifar10.py --threads 16   # default settings (about 1 hour)
+  python knn_cifar10.py --n-cv 50000   # cross-validate on all training data (several hours)
 
-중단 후 다시 실행하면 results/cache에 저장된 이웃 계산 결과를 재사용한다.
+After an interruption, a rerun reuses the neighbor results saved in results/cache.
 """
 import argparse
 import csv
@@ -28,7 +28,7 @@ import numpy as np
 
 BASE_DIR = Path(__file__).resolve().parent
 ARCHIVE = BASE_DIR / "cifar-10-python.tar.gz"
-ARCHIVE_MD5 = "c58f30108f718f92721af3b95e74349a"  # CIFAR-10 공식 페이지의 값
+ARCHIVE_MD5 = "c58f30108f718f92721af3b95e74349a"  # value from the official CIFAR-10 page
 RESULT_DIR = BASE_DIR / "results"
 CACHE_DIR = RESULT_DIR / "cache"
 
@@ -41,22 +41,22 @@ K_VALUES = [1, 3, 5, 7, 9, 11, 15, 21, 31, 51, 101]
 N_FOLDS = 5
 SEED = 42
 
-BATCH_SIZE = 256   # 한 번에 처리할 쿼리 이미지 수
-TRAIN_BLOCK = 512  # L1/L∞에서 학습 데이터를 나누는 단위 (메모리·캐시 절약)
-DOT_BLOCK = 4096   # L2/코사인에서 학습 데이터를 나누는 단위
+BATCH_SIZE = 256   # query images processed at once
+TRAIN_BLOCK = 512  # training-data block size for L1/L∞ (saves memory and cache)
+DOT_BLOCK = 4096   # training-data block size for L2/cosine
 
 
-# ---------------------------------------------------------------- 데이터 ----
+# ------------------------------------------------------------------ Data ----
 def load_cifar10(path=ARCHIVE):
-    """압축 파일에서 직접 읽어 (X_train, y_train, X_test, y_test)를 반환한다.
+    """Read directly from the archive and return (X_train, y_train, X_test, y_test).
 
-    X는 (N, 3072) uint8 배열이다. 픽셀을 [0, 1]로 나눠도 L1, L2, L∞, 코사인의
-    이웃 순위는 변하지 않으므로 메모리를 아끼기 위해 0~255 정수 그대로 둔다.
-    pickle을 열기 전에 체크섬으로 공식 파일인지 확인한다.
+    X is an (N, 3072) uint8 array. Scaling pixels to [0, 1] does not change the neighbor
+    ranking for L1, L2, L∞ or cosine, so the 0-255 integers are kept to save memory.
+    The checksum confirms this is the official file before the pickle is opened.
     """
     digest = hashlib.md5(Path(path).read_bytes()).hexdigest()
     if digest != ARCHIVE_MD5:
-        raise ValueError(f"체크섬 불일치: {digest}")
+        raise ValueError(f"Checksum mismatch: {digest}")
 
     parts = {}
     with tarfile.open(path, "r:gz") as tar:
@@ -74,14 +74,14 @@ def load_cifar10(path=ARCHIVE):
 
 
 def stratified_subset(y, n, rng):
-    """클래스별로 같은 개수를 뽑은 인덱스를 반환한다."""
+    """Return indices with the same number of images from each class."""
     per_class = n // N_CLASSES
     picked = [rng.permutation(np.flatnonzero(y == c))[:per_class] for c in range(N_CLASSES)]
     return rng.permutation(np.concatenate(picked))
 
 
 def stratified_kfold(y, n_folds, rng):
-    """클래스 비율이 같은 n_folds개의 검증 인덱스 배열을 반환한다."""
+    """Return n_folds validation index arrays with equal class proportions."""
     folds = [[] for _ in range(n_folds)]
     for c in range(N_CLASSES):
         indices = rng.permutation(np.flatnonzero(y == c))
@@ -90,9 +90,9 @@ def stratified_kfold(y, n_folds, rng):
     return [np.sort(np.concatenate(fold)) for fold in folds]
 
 
-# ------------------------------------------------------------- 거리 계산 ----
+# ------------------------------------------------------------ Distances ----
 def _absolute_differences(queries, X_train, reduce, dtype, n_threads):
-    """쿼리별로 |x - q|를 계산해 reduce로 집계한다 (L1, L∞ 공용)."""
+    """Compute |x - q| per query and aggregate it with reduce (shared by L1 and L∞)."""
     def one_query(q):
         q = q.astype(np.int16)
         out = np.empty(len(X_train), dtype=dtype)
@@ -106,22 +106,22 @@ def _absolute_differences(queries, X_train, reduce, dtype, n_threads):
 
 
 def l1_distance(queries, X_train, n_threads):
-    """맨해튼 거리: sum_i |q_i - x_i|"""
+    """Manhattan distance: sum_i |q_i - x_i|"""
     return _absolute_differences(
         queries, X_train, lambda d: d.sum(axis=1, dtype=np.int32), np.int32, n_threads)
 
 
 def linf_distance(queries, X_train, n_threads):
-    """체비쇼프 거리: max_i |q_i - x_i|"""
+    """Chebyshev distance: max_i |q_i - x_i|"""
     return _absolute_differences(
         queries, X_train, lambda d: d.max(axis=1), np.int16, n_threads)
 
 
 def l2_distance(queries, X_train, n_threads=None):
-    """유클리드 거리의 제곱: |q|^2 + |x|^2 - 2 q·x
+    """Squared Euclidean distance: |q|^2 + |x|^2 - 2 q·x
 
-    제곱근은 이웃 순위를 바꾸지 않으므로 생략한다. 정수 픽셀을 float64로 계산하므로
-    반올림 오차가 없다.
+    The square root does not change the neighbor ranking, so it is omitted. Integer pixels
+    are computed in float64, so there is no rounding error.
     """
     q = queries.astype(np.float64)
     q_sq = (q * q).sum(axis=1, keepdims=True)
@@ -133,7 +133,7 @@ def l2_distance(queries, X_train, n_threads=None):
 
 
 def cosine_distance(queries, X_train, n_threads=None):
-    """코사인 거리: 1 - q·x / (|q||x|)"""
+    """Cosine distance: 1 - q·x / (|q||x|)"""
     q = queries.astype(np.float64)
     q_norm = np.maximum(np.linalg.norm(q, axis=1, keepdims=True), 1e-12)
     out = np.empty((len(q), len(X_train)), dtype=np.float64)
@@ -150,16 +150,16 @@ DISTANCES = {"l1": l1_distance, "l2": l2_distance,
 
 # ------------------------------------------------------------------- KNN ----
 def majority_vote(neighbor_labels, k):
-    """가까운 순으로 정렬된 이웃 레이블에서 상위 k개로 다수결한다.
+    """Take a majority vote over the first k of the neighbor labels, sorted nearest first.
 
-    득표가 같으면 그중 가장 가까운 이웃의 클래스를 고른다.
+    On a tie, pick the class of the nearest neighbor among the tied classes.
     """
     top_k = neighbor_labels[:, :k]
     n = len(top_k)
     rows = np.arange(n)
     counts = np.zeros((n, N_CLASSES), dtype=np.int32)
     first_rank = np.full((n, N_CLASSES), k, dtype=np.int32)
-    for rank in range(k - 1, -1, -1):  # 역순으로 덮어써 클래스별 최소 순위를 남긴다
+    for rank in range(k - 1, -1, -1):  # overwriting in reverse leaves each class's lowest rank
         labels = top_k[:, rank]
         counts[rows, labels] += 1
         first_rank[rows, labels] = rank
@@ -167,7 +167,7 @@ def majority_vote(neighbor_labels, k):
 
 
 class KNNClassifier:
-    """학습 데이터를 저장해 두고, 예측 때 전수 거리 계산을 하는 KNN."""
+    """KNN that stores the training data and computes all distances at prediction time."""
 
     def __init__(self, metric="l2", n_threads=12):
         self.distance = DISTANCES[metric]
@@ -179,7 +179,7 @@ class KNNClassifier:
         return self
 
     def neighbor_labels(self, X, max_k):
-        """각 쿼리에 대해 가까운 순으로 max_k개 이웃의 레이블을 반환한다."""
+        """Return the labels of the max_k nearest neighbors of each query, nearest first."""
         result = np.empty((len(X), max_k), dtype=np.uint8)
         for s in range(0, len(X), BATCH_SIZE):
             d = self.distance(X[s:s + BATCH_SIZE], self.X_train, self.n_threads)
@@ -192,16 +192,16 @@ class KNNClassifier:
         return majority_vote(self.neighbor_labels(X, k), k)
 
 
-# -------------------------------------------------------------- 평가 지표 ----
+# ------------------------------------------------------ Evaluation metrics ----
 def confusion_matrix(y_true, y_pred):
-    """행은 실제 클래스, 열은 예측 클래스다."""
+    """Rows are true classes; columns are predicted classes."""
     cm = np.zeros((N_CLASSES, N_CLASSES), dtype=np.int64)
     np.add.at(cm, (y_true.astype(np.int64), y_pred.astype(np.int64)), 1)
     return cm
 
 
 def per_class_scores(cm):
-    """클래스별 (precision, recall, f1). 분모가 0이면 해당 값은 0이다."""
+    """Per-class (precision, recall, f1). A value is 0 when its denominator is 0."""
     tp = np.diag(cm).astype(np.float64)
     predicted = cm.sum(axis=0)
     actual = cm.sum(axis=1)
@@ -213,18 +213,18 @@ def per_class_scores(cm):
 
 
 def evaluate(y_true, y_pred):
-    """accuracy와 macro 평균 precision, recall, F1을 반환한다."""
+    """Return accuracy and macro-averaged precision, recall and F1."""
     cm = confusion_matrix(y_true, y_pred)
     precision, recall, f1 = per_class_scores(cm)
     return {"accuracy": np.trace(cm) / cm.sum(), "precision": precision.mean(),
             "recall": recall.mean(), "f1": f1.mean()}
 
 
-# ------------------------------------------------------------------ 실험 ----
+# ------------------------------------------------------------- Experiment ----
 def cached_neighbors(name, X_train, y_train, X_query, metric, max_k, n_threads):
-    """이웃 레이블을 계산해 저장한다. 이미 있으면 불러온다.
+    """Compute and save the neighbor labels, or load them if they already exist.
 
-    최대 k까지의 이웃을 한 번만 구하면 모든 k를 추가 거리 계산 없이 평가할 수 있다.
+    Finding the neighbors up to the largest k once lets every k be evaluated without more distance calculations.
     """
     path = CACHE_DIR / f"{name}.npz"
     if path.exists():
@@ -246,7 +246,7 @@ def write_csv(path, rows):
 
 
 def run_cross_validation(X, y, n_threads):
-    """거리 척도와 k의 모든 조합을 5-fold로 평가한다."""
+    """Evaluate every combination of distance metric and k with 5-fold cross-validation."""
     rng = np.random.default_rng(SEED)
     subset = stratified_subset(y, args.n_cv, rng)
     X, y = X[subset], y[subset]
@@ -284,7 +284,7 @@ def run_cross_validation(X, y, n_threads):
 
 
 def select_k(summary):
-    """거리 척도별로 평균 macro F1이 가장 높은 k를 고른다. 동률이면 작은 k다."""
+    """For each distance metric, pick the k with the highest mean macro F1. Ties go to the smaller k."""
     selected = {}
     for metric in METRICS:
         rows = [r for r in summary if r["metric"] == metric]
@@ -293,7 +293,7 @@ def select_k(summary):
 
 
 def run_test(X_train, y_train, X_test, y_test, selected, n_threads):
-    """학습 데이터 전체로 테스트셋을 평가한다."""
+    """Evaluate the test set using all of the training data."""
     best_metric = max(TEST_METRICS, key=lambda m: selected[m]["f1_mean"])
     rows = []
     for metric in TEST_METRICS:
@@ -320,8 +320,8 @@ def run_test(X_train, y_train, X_test, y_test, selected, n_threads):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--n-cv", type=int, default=20000,
-                        help="교차검증에 사용할 학습 이미지 수 (최대 50000)")
-    parser.add_argument("--threads", type=int, default=12, help="L1/L∞ 계산 스레드 수")
+                        help="training images used for cross-validation (at most 50000)")
+    parser.add_argument("--threads", type=int, default=12, help="threads for L1/L∞ computation")
     args = parser.parse_args()
 
     CACHE_DIR.mkdir(parents=True, exist_ok=True)

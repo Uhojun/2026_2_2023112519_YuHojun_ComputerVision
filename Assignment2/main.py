@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 img = cv2.imread("image.jpg", cv2.IMREAD_GRAYSCALE)
 
 if img is None:
-    raise Exception("이미지를 찾을 수 없습니다.")
+    raise Exception("Image not found.")
 
 
 # 2. Define Structuring Elements (SE)
@@ -64,7 +64,7 @@ diamond = np.array([
 # 3. Apply Dilation
 
 
-iterations = 2     # 차이를 조금 더 보기 위해 2회 수행
+iterations = 2     # Two iterations make the differences easier to see
 
 d_cross = cv2.dilate(img, cross, iterations=iterations)
 d_square = cv2.dilate(img, square, iterations=iterations)

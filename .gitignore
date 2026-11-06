@@ -4,5 +4,5 @@ __pycache__/
 # CIFAR-10 archive: 170MB, over GitHub's 100MB file limit
 cifar-10-python.tar.gz
 
-# Neighbour cache written by knn_cifar10.py
-과제4/results/cache/
+# Neighbor cache written by knn_cifar10.py and input_representation.py
+Assignment4/results/cache/

@@ -1,0 +1,21 @@
+[KNN Assignment – Due Wednesday, November 4]
+
+For this assignment, you are required to implement and evaluate the K-Nearest Neighbors (KNN) algorithm using the CIFAR-10 dataset.
+
+Your work should include:
+
+Implementation of the KNN algorithm
+Experiments with different values of k
+Experiments with different distance metrics
+5-fold cross-validation
+Evaluation results, including:
+Accuracy
+Precision
+Recall
+F1-score
+A brief comparison and explanation of the results
+You may use the attached CIFAR-10 dataset or download it directly from the link below.
+
+CIFAR-10 dataset: https://cave.cs.toronto.edu/kriz/cifar.html
+
+Please complete the assignment by next Wednesday, November 4.

@@ -1,0 +1,27 @@
+{'raw': (50000, 3072), 'gray': (50000, 1024), 'he': (50000, 1024), 'hog': (50000, 1764)}
+[CV] raw fold 0: 174s, best acc 0.3445
+[CV] raw fold 1: 125s, best acc 0.3488
+[CV] raw fold 2: 136s, best acc 0.3402
+[CV] raw fold 3: 155s, best acc 0.3493
+[CV] raw fold 4: 150s, best acc 0.3558
+[CV] gray fold 0: 61s, best acc 0.2990
+[CV] gray fold 1: 73s, best acc 0.3035
+[CV] gray fold 2: 80s, best acc 0.2885
+[CV] gray fold 3: 80s, best acc 0.2953
+[CV] gray fold 4: 82s, best acc 0.3010
+[CV] he fold 0: 88s, best acc 0.3207
+[CV] he fold 1: 85s, best acc 0.3242
+[CV] he fold 2: 73s, best acc 0.3322
+[CV] he fold 3: 69s, best acc 0.3347
+[CV] he fold 4: 68s, best acc 0.3315
+[CV] hog fold 0: 251s, best acc 0.5198
+[CV] hog fold 1: 453s, best acc 0.5333
+[CV] hog fold 2: 537s, best acc 0.5325
+[CV] hog fold 3: 361s, best acc 0.5315
+[CV] hog fold 4: 229s, best acc 0.5228
+selected k: {'raw': 7, 'gray': 9, 'he': 9, 'hog': 31}
+[TEST] raw k=7: 1552s, acc 0.3923, f1 0.3866
+[TEST] gray k=9: 605s, acc 0.3332, f1 0.3266
+[TEST] he k=9: 501s, acc 0.3548, f1 0.3497
+[TEST] hog k=31: 1015s, acc 0.5679, f1 0.5576
+done

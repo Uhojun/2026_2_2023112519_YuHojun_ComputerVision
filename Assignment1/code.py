@@ -9,20 +9,20 @@ from skimage.morphology import disk
 
 
 # =========================================================
-# 1. 이미지 불러오기
+# 1. Load the image
 # =========================================================
-image_path = "images (1).jpg"
+image_path = "input images.jpg"
 
 img = cv2.imread(image_path)
 
 if img is None:
     raise FileNotFoundError(
-        f"이미지를 찾을 수 없습니다: {image_path}"
+        f"Image not found: {image_path}"
     )
 
 
 # =========================================================
-# 2. Grayscale 변환
+# 2. Convert to grayscale
 # =========================================================
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -35,7 +35,7 @@ he_img = cv2.equalizeHist(gray)
 
 # =========================================================
 # 4. AHE (Adaptive Histogram Equalization)
-#    주변 영역별로 Histogram Equalization 수행
+#    Histogram equalization over each local neighborhood
 # =========================================================
 ahe_img = rank.equalize(
     gray,
@@ -44,7 +44,7 @@ ahe_img = rank.equalize(
 
 
 # =========================================================
-# 5. MSE 함수
+# 5. MSE function
 # =========================================================
 def calculate_mse(original, processed):
     original = original.astype(np.float64)
@@ -56,7 +56,7 @@ def calculate_mse(original, processed):
 
 
 # =========================================================
-# 6. PSNR 함수
+# 6. PSNR function
 # =========================================================
 def calculate_psnr(original, processed):
     mse = calculate_mse(original, processed)
@@ -70,7 +70,7 @@ def calculate_psnr(original, processed):
 
 
 # =========================================================
-# 7. MSE / PSNR 계산
+# 7. Compute MSE / PSNR
 # =========================================================
 
 # Original vs Original
@@ -87,7 +87,7 @@ ahe_psnr = calculate_psnr(gray, ahe_img)
 
 
 # =========================================================
-# 8. Histogram 계산
+# 8. Compute histograms
 # =========================================================
 hist_original = cv2.calcHist(
     [gray],
@@ -115,7 +115,7 @@ hist_ahe = cv2.calcHist(
 
 
 # =========================================================
-# 9. 3 x 2 결과 출력
+# 9. Plot the results in a 3 x 2 grid
 # =========================================================
 fig, axes = plt.subplots(
     3,
@@ -125,7 +125,7 @@ fig, axes = plt.subplots(
 
 
 # =========================================================
-# 첫 번째 줄 - Original
+# Row 1 - Original
 # =========================================================
 
 # Original Image
@@ -162,7 +162,7 @@ axes[0, 1].set_ylabel("Frequency")
 
 
 # =========================================================
-# 두 번째 줄 - HE
+# Row 2 - HE
 # =========================================================
 
 # HE Image
@@ -201,7 +201,7 @@ axes[1, 1].set_ylabel("Frequency")
 
 
 # =========================================================
-# 세 번째 줄 - AHE
+# Row 3 - AHE
 # =========================================================
 
 # AHE Image
@@ -240,13 +240,13 @@ axes[2, 1].set_ylabel("Frequency")
 
 
 # =========================================================
-# 10. 화면 정리
+# 10. Tidy the layout
 # =========================================================
 plt.tight_layout()
 
 
 # =========================================================
-# 11. 결과 저장
+# 11. Save the figure
 # =========================================================
 plt.savefig(
     "he_ahe_result.png",
@@ -256,13 +256,13 @@ plt.savefig(
 
 
 # =========================================================
-# 12. 화면 출력
+# 12. Show the figure
 # =========================================================
 plt.show()
 
 
 # =========================================================
-# 13. 터미널 결과 출력
+# 13. Print the results to the terminal
 # =========================================================
 print("====================================")
 print("          IMAGE QUALITY")
