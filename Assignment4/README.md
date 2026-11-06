@@ -1,6 +1,6 @@
 # Assignment 4: KNN on CIFAR-10
 
-K-Nearest Neighbors implemented in NumPy and evaluated on CIFAR-10 with different values of k and different distance metrics, using 5-fold cross-validation. See [`assignment_notice.txt`](assignment_notice.txt) for the assignment and [`KNN_summary.pdf`](KNN_summary.pdf) for a two-page summary of the results.
+K-Nearest Neighbors implemented in NumPy and evaluated on CIFAR-10 with different values of k and different distance metrics, using 5-fold cross-validation. See [`assignment_notice.txt`](assignment_notice.txt) for the assignment.
 
 ## Method
 
@@ -28,9 +28,9 @@ L1 scored best. L∞ scored far lowest because it looks only at the single large
 
 This experiment was not required by the assignment. It keeps the KNN, the L1 distance, the images and the folds, and changes only what KNN compares: raw color pixels, grayscale pixels, histogram-equalized (HE) grayscale pixels or HOG features.
 
-![Examples of each input representation](figure4_input_examples.png)
+![The same images as four inputs](figure3_input_examples.png)
 
-![KNN performance by input representation](figure3_input_representation.png)
+![KNN performance by input representation](figure4_input_performance.png)
 
 | Input | Dimensions | Chosen k | CV accuracy | Test accuracy | Test precision | Test recall | Test F1 |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -53,9 +53,9 @@ Download `cifar-10-python.tar.gz` from the [CIFAR-10 page](https://cave.cs.toron
 python knn_cifar10.py
 python input_representation.py
 python make_figures.py
-python make_summary.py
+python make_repr_figures.py
 ```
 
-The first two commands save neighbor results to `results/cache/`, which is not in the repository, and take about an hour or more each on a CPU. All measured results are in `results/`, and the extra experiment's are in `results/input_representation/`.
+The first two commands save neighbor results to `results/cache/`, which is not in the repository, and take about an hour or more each on a CPU. All measured results are in `results/`, and the extra experiment's are in `results/input_representation/`. `make_summary.py` optionally builds a results page, `KNN_summary.html`.
 
-Requires NumPy; `input_representation.py` also needs scikit-image, and `make_figures.py` needs Matplotlib and scikit-image.
+Requires NumPy. `input_representation.py` also needs scikit-image, `make_figures.py` needs Matplotlib, and `make_repr_figures.py` needs both.

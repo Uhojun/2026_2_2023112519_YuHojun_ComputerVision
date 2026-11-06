@@ -14,4 +14,4 @@ This is the repository for the assignment submission of Yu Ho-jun, 2023112519, C
 
 `cifar-10-python.tar.gz` (170MB) is not in this repository because it is over GitHub's 100MB file limit. To run the code, download it from the [CIFAR-10 page](https://cave.cs.toronto.edu/kriz/cifar.html) and put it in the `Assignment4` folder.
 
-`Assignment4/results/cache/`, which is created while the code runs, is also not included. The measured results are in the CSV files in `Assignment4/results/` and in `Assignment4/KNN_summary.pdf`. See [Assignment4/README.md](Assignment4/README.md) for details.
+`Assignment4/results/cache/`, which is created while the code runs, is also not included. The measured results are in the CSV files in `Assignment4/results/`. See [Assignment4/README.md](Assignment4/README.md) for details.
