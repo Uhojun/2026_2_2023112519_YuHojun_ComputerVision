@@ -9,6 +9,7 @@ This is the repository for the assignment submission of Yu Ho-jun, 2023112519, C
 | [과제2](과제2) | 5가지 구조 요소를 사용한 팽창(Dilation) | `main.py` |
 | [과제3](과제3) | 침식, 열림, 닫힘 | `main.py`, `morphology_assignment_1002/morphology_assignment/main.py` |
 | [과제4](과제4) | CIFAR-10 KNN 분류: k와 거리 척도 비교, 5-fold 교차검증 | `knn_cifar10.py` |
+| [과제5](과제5) | CIFAR-10 선형 분류기: 무작위 가중치로 점수, SVM 손실, Softmax, 가중치 시각화 | `linear_classifier.py` |
 
 ## 과제4 데이터셋
 
