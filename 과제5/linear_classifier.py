@@ -175,16 +175,38 @@ def main():
     plt.close(fig)
 
     # Scores vs Softmax probabilities for the first 3 examples
-    fig, axes = plt.subplots(3, 2, figsize=(12, 7))
+    # All probabilities are ~0.1, so the probability axis is zoomed in around
+    # 1/10 and every bar is labelled; otherwise the bars look identical.
+    lo = probs[:3].min() - 0.0003
+    hi = probs[:3].max() + 0.0004
+    fig, axes = plt.subplots(3, 2, figsize=(14, 9))
     for k in range(3):
-        axes[k, 0].bar(class_names, scores[k], color="tab:blue")
-        axes[k, 0].set_title(f"#{idx[k]} ({class_names[y[k]]}) raw scores", fontsize=9)
-        axes[k, 1].bar(class_names, probs[k], color="tab:orange")
-        axes[k, 1].axhline(0.1, color="black", ls="--", lw=0.8)
-        axes[k, 1].set_ylim(0, max(0.2, probs[k].max() * 1.2))
-        axes[k, 1].set_title(f"softmax probs (sum = {probs[k].sum():.4f}), dashed = 1/10", fontsize=9)
-        for a in axes[k]:
-            a.tick_params(axis="x", labelsize=7)
+        colors = ["#9db4d0"] * 10
+        colors[y[k]] = "tab:green"
+        if preds[k] != y[k]:
+            colors[preds[k]] = "tab:red"
+        else:
+            colors[preds[k]] = "tab:green"
+        ax_s, ax_p = axes[k]
+        ax_s.bar(class_names, scores[k], color=colors)
+        ax_s.axhline(0, color="black", lw=0.6)
+        for c in range(10):
+            ax_s.text(c, scores[k, c], f"{scores[k, c]:.4f}", ha="center",
+                      va="bottom" if scores[k, c] >= 0 else "top", fontsize=7)
+        ax_s.set_ylim(scores[:3].min() * 1.35, scores[:3].max() * 1.25)
+        ax_s.set_title(f"#{idx[k]} (true: {class_names[y[k]]}) raw scores", fontsize=10)
+
+        ax_p.bar(class_names, probs[k], color=colors, bottom=0)
+        ax_p.axhline(0.1, color="black", ls="--", lw=0.8)
+        for c in range(10):
+            ax_p.text(c, probs[k, c] + 0.00003, f"{probs[k, c]:.4f}", ha="center", va="bottom", fontsize=7)
+        ax_p.set_ylim(lo, hi)
+        ax_p.set_title(f"softmax probabilities (sum = {probs[k].sum():.4f})  "
+                       f"[y-axis zoomed: {lo:.4f}–{hi:.4f}, dashed = 1/10]", fontsize=10)
+        for a in (ax_s, ax_p):
+            a.tick_params(axis="x", labelsize=8)
+    fig.suptitle("Raw scores (left) vs Softmax probabilities (right)  "
+                 "green = true class, red = wrong prediction", fontsize=11)
     fig.tight_layout()
     fig.savefig(os.path.join(OUT_DIR, "scores_vs_softmax.png"), dpi=120)
     plt.close(fig)

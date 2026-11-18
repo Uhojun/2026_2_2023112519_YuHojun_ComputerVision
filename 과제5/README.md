@@ -84,6 +84,8 @@ probs = exp / exp.sum(axis=1, keepdims=True)
 
 ![softmax](results/scores_vs_softmax.png)
 
+*The probabilities differ only in the 4th decimal place, so the y-axis of the right-hand plots is zoomed in to 0.0990–0.1010 (dashed line = 1/10).*
+
 | Image | airplane | automobile | bird | cat | deer | dog | frog | horse | ship | truck | **Sum** |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | #3 | 0.0994 | 0.1001 | 0.0995 | 0.0993 | 0.1000 | **0.1006** | 0.1006 | 0.1003 | 0.1005 | 0.0997 | **1.0** |
