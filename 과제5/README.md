@@ -10,6 +10,7 @@ This assignment checks how a linear classifier `f(x) = Wx + b` computes class sc
   3. `python linear_classifier.py`
 
 | No | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+
 | Class | airplane | automobile | bird | cat | deer | dog | frog | horse | ship | truck |
 
 ---
