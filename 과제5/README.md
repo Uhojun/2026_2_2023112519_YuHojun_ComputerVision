@@ -9,10 +9,6 @@ This assignment checks how a linear classifier `f(x) = Wx + b` computes class sc
   2. Extract the [CIFAR-10 python version](https://cave.cs.toronto.edu/kriz/cifar.html) into `data/`
   3. `python linear_classifier.py`
 
-| No | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
-
-| Class | airplane | automobile | bird | cat | deer | dog | frog | horse | ship | truck |
-
 ---
 
 ## 1. Initializing W and b
@@ -139,3 +135,38 @@ The pipeline (scores → prediction → loss → probabilities) works correctly.
 - The predictions are decided by chance.
 
 W has to be trained to get meaningful classifications.
+
+---
+
+## Extra: What Would Trained Weights Look Like?
+
+> Not required by the assignment. The same linear classifier was trained briefly to compare with the random weights in section 6.
+
+- Script: [`train_compare.py`](train_compare.py)
+- Setup: 50,000 training images (pixels minus the mean image), multiclass SVM loss + L2 regularization, minibatch SGD (batch 200, lr 1e-7, reg 2.5e4, 1500 iterations), seed 42
+
+![random vs trained](results/random_vs_trained_weights.png)
+
+| | Random W (this assignment) | Trained W |
+|---|---|---|
+| Test accuracy (10,000 images) | 9.7% (chance level) | **36.0%** |
+| Weight images | Noise | **Blurry class templates** |
+
+**What the trained weights show:** Each class's weights look like an "average image" of that class.
+
+| Class | What appears | Why |
+|---|---|---|
+| airplane, ship | Blue background | Sky and sea photos |
+| automobile | Red body in the middle, window on top | Many red cars seen from the front |
+| bird, deer, frog | Green and brown background | Grass and forest |
+| horse | A horse with a head on **both sides** | Left-facing and right-facing horses are mixed |
+| truck | Large dark body at the bottom | Trucks fill the lower part of the image |
+
+**Why this happens:**
+- The score `W[c] · x` is high when the image looks like the weight image.
+- Training therefore pushes each class's weights toward images of that class and away from other classes, which creates the templates.
+- Random weights contain none of this information, which is why section 6 shows only noise.
+
+**Limits of a linear classifier:**
+- It has only one template per class, so different poses get blended together (the two-headed horse).
+- It relies heavily on color and background, so accuracy stays around 36–40%.
